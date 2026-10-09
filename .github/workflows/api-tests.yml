@@ -1,8 +1,7 @@
 # 接口自动化测试 CI:每次 push / PR 自动跑全量用例并上传 HTML 报告
 #
-# 使用前提:
-# 1. 被测系统仓库(<你的GitHub用户名>/restaurant-booking-system-master)已推送
-# 2. 本测试仓库已推送,并把下方 repository 改成实际的后端仓库地址
+# 被测系统仓库: https://github.com/Mula3816/resBookSys
+# 本测试仓库:   https://github.com/Mula3816/resBookSys_api_test
 name: API Tests
 
 on:
@@ -20,7 +19,7 @@ jobs:
       - name: 检出被测系统(后端仓库)
         uses: actions/checkout@v4
         with:
-          repository: <你的GitHub用户名>/restaurant-booking-system-master  # TODO: 改成实际仓库
+          repository: Mula3816/resBookSys
           path: backend-src
 
       - name: 安装 Node.js
