@@ -1,0 +1,65 @@
+# 接口自动化测试 CI:每次 push / PR 自动跑全量用例并上传 HTML 报告
+#
+# 使用前提:
+# 1. 被测系统仓库(<你的GitHub用户名>/restaurant-booking-system-master)已推送
+# 2. 本测试仓库已推送,并把下方 repository 改成实际的后端仓库地址
+name: API Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出测试代码
+        uses: actions/checkout@v4
+
+      - name: 检出被测系统(后端仓库)
+        uses: actions/checkout@v4
+        with:
+          repository: <你的GitHub用户名>/restaurant-booking-system-master  # TODO: 改成实际仓库
+          path: backend-src
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: 安装测试依赖
+        run: pip install -r requirements.txt
+
+      - name: 安装后端依赖
+        working-directory: backend-src/backend
+        run: npm install
+
+      - name: 准备环境变量与数据库
+        working-directory: backend-src/backend
+        run: |
+          cp .env.example .env
+          npm run init-db
+          node scripts/initializeCompleteSystem.js
+
+      - name: 启动后端服务
+        working-directory: backend-src/backend
+        run: nohup node server.js > /tmp/backend.log 2>&1 &
+
+      - name: 运行接口测试
+        env:
+          BASE_URL: http://localhost:5000
+          BACKEND_DIR: backend-src/backend
+        run: python3 -m pytest
+
+      - name: 上传测试报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: report/report.html
